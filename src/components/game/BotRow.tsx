@@ -40,8 +40,10 @@ export function BotRow({ player, playerIndex }: BotRowProps) {
           const isSelectable = !!activePower && playerIndex !== 0 && (
             (activePower.type === 'PEEK_OPPONENT' && activePower.step === 1) ||
             (activePower.type === 'BLIND_SWAP' && activePower.step === 2) ||
-            (activePower.type === 'PEEK_AND_SWAP' && activePower.step === 3) ||
-            (activePower.type === 'DOUBLE_PEEK_SWAP' && activePower.step === 4)
+            // Q: step 1 = peek any (opponents ok), step 3 = pick opponent to swap with
+            (activePower.type === 'PEEK_AND_SWAP' && (activePower.step === 1 || activePower.step === 3)) ||
+            // Black K: steps 1-2 = peek any (opponents ok), step 4 = pick opponent to swap with
+            (activePower.type === 'DOUBLE_PEEK_SWAP' && (activePower.step === 1 || activePower.step === 2 || activePower.step === 4))
           );
           return (
             <Card

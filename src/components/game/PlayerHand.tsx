@@ -24,8 +24,10 @@ export function PlayerHand() {
       const needsOwnCard =
         (ap.type === 'PEEK_OWN' && ap.step === 1) ||
         (ap.type === 'BLIND_SWAP' && ap.step === 1) ||
-        (ap.type === 'PEEK_AND_SWAP' && ap.step === 2) ||
-        (ap.type === 'DOUBLE_PEEK_SWAP' && ap.step === 3);
+        // Q: step 1 = peek any (own cards allowed), step 2 = pick own card to swap
+        (ap.type === 'PEEK_AND_SWAP' && (ap.step === 1 || ap.step === 2)) ||
+        // Black K: steps 1-2 = peek any (own cards allowed), step 3 = pick own card to swap
+        (ap.type === 'DOUBLE_PEEK_SWAP' && (ap.step === 1 || ap.step === 2 || ap.step === 3));
       if (needsOwnCard) { selectCardForPower(0, cardIndex); return; }
     }
 
@@ -44,8 +46,8 @@ export function PlayerHand() {
       return (
         (ap.type === 'PEEK_OWN' && ap.step === 1) ||
         (ap.type === 'BLIND_SWAP' && ap.step === 1) ||
-        (ap.type === 'PEEK_AND_SWAP' && ap.step === 2) ||
-        (ap.type === 'DOUBLE_PEEK_SWAP' && ap.step === 3)
+        (ap.type === 'PEEK_AND_SWAP' && (ap.step === 1 || ap.step === 2)) ||
+        (ap.type === 'DOUBLE_PEEK_SWAP' && (ap.step === 1 || ap.step === 2 || ap.step === 3))
       );
     }
     if (drawnCard && isMyTurn && turnPhase === 'HOLDING_DRAWN_CARD') return true;

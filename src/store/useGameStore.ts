@@ -1,8 +1,14 @@
 import { create } from 'zustand';
-import type { GameState, Player, ActivePower, PowerType, Difficulty } from '../types/game';
+import type { GameState, Player, ActivePower, PowerType, Difficulty, Card } from '../types/game';
 import { createDeck, shuffle, isPowerCard, reshuffleDiscard } from '../lib/deck';
 import { generateBotName, generateBotAvatar } from '../lib/botNames';
 import { INITIAL_HAND_SIZE, HUMAN_GRACE_WINDOW_MS } from '../lib/constants';
+
+/** Red Kings (hearts/diamonds) have no power — only Black Kings do */
+function isActionablePowerCard(card: Card): boolean {
+  return isPowerCard(card.rank) &&
+    !(card.rank === 'K' && (card.suit === 'hearts' || card.suit === 'diamonds'));
+}
 
 const INITIAL_STATE: Omit<GameState, 'humanName' | 'botCount' | 'difficulty'> = {
   phase: 'LANDING',
@@ -173,7 +179,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const discardedCard = { ...displaced, isRevealed: true, knownBy: [] as number[] };
     const newDiscardPile = [...discardPile, discardedCard];
 
-    if (isPowerCard(discardedCard.rank)) {
+    if (isActionablePowerCard(discardedCard)) {
       set({ players: updatedPlayers, discardPile: newDiscardPile, drawnCard: null, pendingPowerCard: discardedCard, turnPhase: 'POWER_CHOICE' });
     } else {
       set({ players: updatedPlayers, discardPile: newDiscardPile, drawnCard: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
@@ -186,7 +192,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     if (!drawnCard || drawnFrom === 'discard') return;
     const discardedCard = { ...drawnCard, isRevealed: true };
     const newDiscardPile = [...discardPile, discardedCard];
-    if (isPowerCard(discardedCard.rank)) {
+    if (isActionablePowerCard(discardedCard)) {
       set({ discardPile: newDiscardPile, drawnCard: null, pendingPowerCard: discardedCard, turnPhase: 'POWER_CHOICE' });
     } else {
       set({ discardPile: newDiscardPile, drawnCard: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
