@@ -6,7 +6,7 @@ export function PlayerHand() {
   const {
     players, currentPlayerIndex, turnPhase, activePower, drawnCard, drawnFrom,
     setupPeeksRemaining, phase, swapDrawnCard, discardDrawnCard, attemptSlap,
-    setupPeek, selectCardForPower, skipPowerSwap,
+    setupPeek, selectCardForPower, skipPowerSwap, swapFX,
   } = useGameStore();
 
   const human = players[0];
@@ -75,6 +75,7 @@ export function PlayerHand() {
               card={card}
               size="md"
               isSelectable={getCardSelectable(ci)}
+              isSwapped={swapFX?.cardIds.includes(card.id)}
               onClick={() => handleCardClick(ci)}
             />
             {isSetupPeek && ci < 2 && (

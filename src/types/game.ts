@@ -71,4 +71,5 @@ export interface GameState {
   slapFXActive: boolean;
   cambioFXActive: boolean;
   lastSlapValid: boolean | null;
+  swapFX: { cardIds: string[] } | null;
 }

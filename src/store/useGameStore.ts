@@ -30,6 +30,7 @@ const INITIAL_STATE: Omit<GameState, 'humanName' | 'botCount' | 'difficulty'> = 
   slapFXActive: false,
   cambioFXActive: false,
   lastSlapValid: null,
+  swapFX: null,
 };
 
 interface GameActions {
@@ -53,6 +54,7 @@ interface GameActions {
   clearToast: (id: string) => void;
   setSlapFX: (active: boolean) => void;
   setCambioFX: (active: boolean) => void;
+  setSwapFX: (cardIds: string[] | null) => void;
   resetGame: () => void;
   updateBotMemory: (playerIndex: number, cardId: string, value: number) => void;
   botEndTurn: () => void;
@@ -267,6 +269,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
         if (pi === sel2.playerIndex) return { ...p, hand: p.hand.map((c, ci) => ci === sel2.cardIndex ? { ...card1, isRevealed: false, knownBy: [] as number[] } : c) };
         return p;
       });
+      get().setSwapFX([card1.id, card2.id]);
       set({ players: updatedPlayers, activePower: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
       get().botEndTurn();
       return;
@@ -307,6 +310,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
           if (pi === oppSel.playerIndex) return { ...p, hand: p.hand.map((c, ci) => ci === oppSel.cardIndex ? { ...ownCard, isRevealed: false, knownBy: [] as number[] } : c) };
           return p;
         });
+        get().setSwapFX([ownCard.id, oppCard.id]);
         set({ players: updatedPlayers, activePower: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
         get().botEndTurn();
       }
@@ -349,6 +353,7 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
           if (pi === oppSel.playerIndex) return { ...p, hand: p.hand.map((c, ci) => ci === oppSel.cardIndex ? { ...ownCard, isRevealed: false, knownBy: [] as number[] } : c) };
           return p;
         });
+        get().setSwapFX([ownCard.id, oppCard.id]);
         set({ players: updatedPlayers, activePower: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
         get().botEndTurn();
       }
@@ -438,6 +443,10 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   clearToast: (id) => set(s => ({ toasts: s.toasts.filter(t => t.id !== id) })),
   setSlapFX: (active) => set({ slapFXActive: active }),
   setCambioFX: (active) => set({ cambioFXActive: active }),
+  setSwapFX: (cardIds) => {
+    set({ swapFX: cardIds ? { cardIds } : null });
+    if (cardIds) setTimeout(() => set({ swapFX: null }), 1500);
+  },
 
   updateBotMemory: (playerIndex, cardId, value) => {
     const { players, turnNumber } = get();

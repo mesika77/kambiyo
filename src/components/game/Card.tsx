@@ -8,6 +8,7 @@ interface CardProps {
   isSelected?: boolean;
   size?: 'xs' | 'sm' | 'md';
   faceDown?: boolean;
+  isSwapped?: boolean;
 }
 
 const SUIT_SYMBOLS: Record<string, string> = {
@@ -57,9 +58,10 @@ function CardBack({ size }: { size: 'xs' | 'sm' | 'md' }) {
   );
 }
 
-export function Card({ card, onClick, isSelectable, isSelected, size = 'md', faceDown }: CardProps) {
+export function Card({ card, onClick, isSelectable, isSelected, size = 'md', faceDown, isSwapped }: CardProps) {
   const showFront = !faceDown && card.isRevealed;
   const dims = size === 'md' ? 'w-16 h-24' : size === 'sm' ? 'w-10 h-14' : 'w-7 h-10';
+  const rounded = size === 'xs' ? 'rounded-lg' : 'rounded-xl';
   return (
     <motion.div
       className={`relative ${dims} ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
@@ -69,14 +71,26 @@ export function Card({ card, onClick, isSelectable, isSelected, size = 'md', fac
     >
       {isSelectable && !isSelected && (
         <motion.div
-          className="absolute inset-0 rounded-xl border-2 border-[#00F5FF] z-10 pointer-events-none"
+          className={`absolute inset-0 ${rounded} border-2 border-[#00F5FF] z-10 pointer-events-none`}
           animate={{ opacity: [0.4, 1, 0.4] }}
           transition={{ repeat: Infinity, duration: 1.2 }}
         />
       )}
       {isSelected && (
-        <div className="absolute inset-0 rounded-xl border-2 border-[#FF006E] z-10 pointer-events-none" />
+        <div className={`absolute inset-0 ${rounded} border-2 border-[#FF006E] z-10 pointer-events-none`} />
       )}
+      <AnimatePresence>
+        {isSwapped && (
+          <motion.div
+            key="swap-fx"
+            className={`absolute inset-0 ${rounded} border-2 border-[#FFD700] z-10 pointer-events-none`}
+            style={{ boxShadow: '0 0 12px 2px #FFD70088' }}
+            initial={{ opacity: 0, scale: 1.12 }}
+            animate={{ opacity: [0, 1, 1, 0], scale: [1.12, 1, 1, 0.96] }}
+            transition={{ duration: 1.4, ease: 'easeOut' }}
+          />
+        )}
+      </AnimatePresence>
       <AnimatePresence mode="wait" initial={false}>
         {showFront ? (
           <motion.div

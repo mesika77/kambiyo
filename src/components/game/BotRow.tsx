@@ -10,7 +10,7 @@ interface BotRowProps {
 }
 
 export function BotRow({ player, playerIndex, botCount }: BotRowProps) {
-  const { currentPlayerIndex, turnPhase, activePower } = useGameStore();
+  const { currentPlayerIndex, turnPhase, activePower, swapFX } = useGameStore();
   const isActive = currentPlayerIndex === playerIndex;
   const isThinking = isActive && (turnPhase === 'WAITING_FOR_DRAW' || turnPhase === 'HOLDING_DRAWN_CARD');
 
@@ -65,6 +65,7 @@ export function BotRow({ player, playerIndex, botCount }: BotRowProps) {
               card={card}
               size={cardSize}
               isSelectable={isSelectable}
+              isSwapped={swapFX?.cardIds.includes(card.id)}
               onClick={isSelectable ? () => handleCardClick(ci) : undefined}
             />
           );

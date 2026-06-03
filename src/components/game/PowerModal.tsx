@@ -54,12 +54,12 @@ export function PowerModal() {
 
       {turnPhase === 'EXECUTING_POWER' && activePower && isHumanTurn && (
         <motion.div
-          className="fixed top-0 left-0 right-0 z-30 flex justify-center pt-4"
+          className="fixed top-0 left-0 right-0 z-30 flex justify-center pt-4 pointer-events-none"
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -16 }}
         >
-          <div className="bg-[#1A1A2E]/90 border border-[#00F5FF]/40 rounded-2xl px-5 py-3 mx-4 backdrop-blur-sm">
+          <div className="pointer-events-auto bg-[#1A1A2E]/90 border border-[#00F5FF]/40 rounded-2xl px-5 py-3 mx-4 backdrop-blur-sm">
             <p className="text-[#00F5FF] text-sm font-semibold text-center">
               {POWER_PROMPTS[activePower.type]?.[activePower.step - 1] ?? 'select a card'}
             </p>
