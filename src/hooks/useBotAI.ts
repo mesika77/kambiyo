@@ -135,6 +135,32 @@ function executeBotPower(botIndex: number, difficulty: Difficulty) {
 export function useBotAI() {
   const { phase, turnPhase, currentPlayerIndex, players, difficulty } = useGameStore();
 
+  // Handle the case where a bot lands in POWER_CHOICE (e.g. swapDrawnCard displaced a power card)
+  useEffect(() => {
+    if (phase !== 'PLAYING' && phase !== 'CAMBIO_CALLED') return;
+    if (turnPhase !== 'POWER_CHOICE') return;
+
+    const player = players[currentPlayerIndex];
+    if (!player?.isBot) return;
+
+    const delays = BOT_TURN_DELAYS[difficulty];
+    const delay = rand(Math.floor(delays.min / 3), Math.floor(delays.max / 3));
+
+    const timer = setTimeout(() => {
+      const s = useGameStore.getState();
+      if (s.turnPhase !== 'POWER_CHOICE' || s.currentPlayerIndex !== currentPlayerIndex) return;
+      const usePower = difficulty === 'easy' ? Math.random() > 0.5 : true;
+      if (usePower) {
+        s.activatePower();
+        setTimeout(() => executeBotPower(currentPlayerIndex, difficulty), rand(300, 600));
+      } else {
+        s.skipPower();
+      }
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [phase, turnPhase, currentPlayerIndex]);
+
   useEffect(() => {
     if (phase !== 'PLAYING' && phase !== 'CAMBIO_CALLED') return;
     if (turnPhase !== 'WAITING_FOR_DRAW') return;
