@@ -126,7 +126,7 @@ export function ScoringScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#080810] flex flex-col relative overflow-y-auto select-none">
+    <div className="min-h-screen bg-[#080810] flex flex-col relative select-none">
 
       {/* ── CAMBIO FLASH ── */}
       <AnimatePresence>
@@ -281,7 +281,7 @@ export function ScoringScreen() {
         </div>
 
         {/* Play Again */}
-        <div className="flex-none pt-4 pb-20 flex justify-center" style={{ paddingBottom: 'max(5rem, calc(env(safe-area-inset-bottom) + 3rem))' }}>
+        <div className="flex-none pt-4 pb-16 flex justify-center">
           <AnimatePresence>
             {showPlayAgain && (
               <motion.button

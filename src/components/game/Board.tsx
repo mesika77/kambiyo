@@ -23,7 +23,7 @@ export function Board() {
   const rightBotIdx = topBotCount + 1;
 
   return (
-    <div className="min-h-screen bg-[#080810] flex flex-col relative overflow-hidden select-none">
+    <div className="h-screen bg-[#080810] flex flex-col relative overflow-hidden select-none" style={{ height: '100dvh' }}>
       <SlapFX />
       <ToastStack />
       <PowerModal />
