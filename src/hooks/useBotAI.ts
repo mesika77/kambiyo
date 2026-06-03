@@ -133,7 +133,7 @@ function executeBotPower(botIndex: number, difficulty: Difficulty) {
 }
 
 export function useBotAI() {
-  const { phase, turnPhase, currentPlayerIndex, players, difficulty, turnNumber, discardPile } = useGameStore();
+  const { phase, turnPhase, currentPlayerIndex, players, difficulty } = useGameStore();
 
   useEffect(() => {
     if (phase !== 'PLAYING' && phase !== 'CAMBIO_CALLED') return;

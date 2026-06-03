@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { GameState, Player, Card, ActivePower, PowerType, Difficulty } from '../types/game';
+import type { GameState, Player, ActivePower, PowerType, Difficulty } from '../types/game';
 import { createDeck, shuffle, isPowerCard, reshuffleDiscard } from '../lib/deck';
 import { generateBotName, generateBotAvatar } from '../lib/botNames';
 import { INITIAL_HAND_SIZE, HUMAN_GRACE_WINDOW_MS } from '../lib/constants';
