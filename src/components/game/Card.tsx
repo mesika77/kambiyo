@@ -82,10 +82,10 @@ export function Card({ card, onClick, isSelectable, isSelected, size = 'md', fac
           <motion.div
             key="front"
             className="absolute inset-0"
-            initial={{ rotateY: 90, opacity: 0 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ rotateY: -90, opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            initial={{ rotateY: 90, opacity: 0, scale: 0.85 }}
+            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+            exit={{ rotateY: -90, opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
           >
             <CardFace card={card} size={size ?? 'md'} />
           </motion.div>
@@ -93,10 +93,10 @@ export function Card({ card, onClick, isSelectable, isSelected, size = 'md', fac
           <motion.div
             key="back"
             className="absolute inset-0"
-            initial={{ rotateY: 90, opacity: 0 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ rotateY: -90, opacity: 0 }}
-            transition={{ duration: 0.18 }}
+            initial={{ rotateY: 90, opacity: 0, scale: 0.85 }}
+            animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+            exit={{ rotateY: -90, opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.28, ease: 'easeOut' }}
           >
             <CardBack size={size ?? 'md'} />
           </motion.div>

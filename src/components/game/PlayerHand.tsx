@@ -40,7 +40,7 @@ export function PlayerHand() {
   }
 
   function getCardSelectable(cardIndex: number): boolean {
-    if (isSetupPeek) return !human.hand[cardIndex].knownBy.includes(0) && setupPeeksRemaining > 0;
+    if (isSetupPeek) return cardIndex >= 2 && !human.hand[cardIndex].knownBy.includes(0) && setupPeeksRemaining > 0;
     if (activePower) {
       const ap = activePower;
       return (
@@ -70,13 +70,19 @@ export function PlayerHand() {
 
       <div className="grid grid-cols-2 gap-3">
         {human.hand.map((card, ci) => (
-          <Card
-            key={card.id}
-            card={card}
-            size="md"
-            isSelectable={getCardSelectable(ci)}
-            onClick={() => handleCardClick(ci)}
-          />
+          <div key={card.id} className="relative">
+            <Card
+              card={card}
+              size="md"
+              isSelectable={getCardSelectable(ci)}
+              onClick={() => handleCardClick(ci)}
+            />
+            {isSetupPeek && ci < 2 && (
+              <div className="absolute inset-0 rounded-xl bg-black/40 flex items-center justify-center pointer-events-none">
+                <span className="text-white/40 text-lg">🔒</span>
+              </div>
+            )}
+          </div>
         ))}
       </div>
 
@@ -84,9 +90,10 @@ export function PlayerHand() {
         {drawnCard && isMyTurn && turnPhase === 'HOLDING_DRAWN_CARD' && (
           <motion.div
             className="flex flex-col items-center gap-2"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 32, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 26 }}
           >
             <p className="text-[#F0F0FF]/50 text-xs">drawn card — swap with a card above or discard</p>
             <div className="flex items-center gap-4">

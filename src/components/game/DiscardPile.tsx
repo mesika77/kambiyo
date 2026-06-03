@@ -11,7 +11,7 @@ export function DiscardPile() {
   return (
     <div className="flex flex-col items-center gap-1">
       <div
-        className={`w-14 h-20 rounded-xl relative ${canDraw && topCard ? 'cursor-pointer' : 'cursor-default'}`}
+        className={`w-16 h-24 rounded-xl relative ${canDraw && topCard ? 'cursor-pointer' : 'cursor-default'}`}
         onClick={canDraw && topCard ? drawFromDiscard : undefined}
       >
         {topCard ? (
@@ -19,9 +19,9 @@ export function DiscardPile() {
             <motion.div
               key={topCard.id}
               className="absolute inset-0"
-              initial={{ scale: 0.7, opacity: 0, y: -10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              initial={{ scale: 0.5, opacity: 0, y: -48, rotate: -18 }}
+              animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 22 }}
             >
               <Card card={{ ...topCard, isRevealed: true }} size="md" />
             </motion.div>

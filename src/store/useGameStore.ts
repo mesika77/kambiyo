@@ -178,13 +178,9 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     );
     const discardedCard = { ...displaced, isRevealed: true, knownBy: [] as number[] };
     const newDiscardPile = [...discardPile, discardedCard];
-
-    if (isActionablePowerCard(discardedCard)) {
-      set({ players: updatedPlayers, discardPile: newDiscardPile, drawnCard: null, pendingPowerCard: discardedCard, turnPhase: 'POWER_CHOICE' });
-    } else {
-      set({ players: updatedPlayers, discardPile: newDiscardPile, drawnCard: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
-      get().botEndTurn();
-    }
+    // Displaced hand cards never trigger a power (only drawn-and-discarded cards do)
+    set({ players: updatedPlayers, discardPile: newDiscardPile, drawnCard: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
+    get().botEndTurn();
   },
 
   discardDrawnCard: () => {
@@ -232,20 +228,31 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const card = players[playerIndex].hand[cardIndex];
 
     if (activePower.type === 'PEEK_OWN' || activePower.type === 'PEEK_OPPONENT') {
-      const updatedPlayers = players.map((p, pi) =>
-        pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: true } : c) } : p
-      );
-      // Null activePower immediately — prevents double-tap selecting a second card
-      set({ players: updatedPlayers, activePower: null });
-      if (players[currentPlayerIndex].isBot) get().updateBotMemory(currentPlayerIndex, card.id, card.value);
-      setTimeout(() => {
-        const s = get();
-        const rehidden = s.players.map((p, pi) =>
-          pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: false } : c) } : p
+      const isPeekerBot = players[currentPlayerIndex].isBot;
+      // Null activePower immediately — prevents double-tap
+      set({ activePower: null });
+      if (isPeekerBot) {
+        // Bot peek: private — no visual reveal, just update memory and end turn
+        get().updateBotMemory(currentPlayerIndex, card.id, card.value);
+        setTimeout(() => {
+          set({ slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
+          get().botEndTurn();
+        }, 300);
+      } else {
+        // Human peek: reveal card visually for 2 s (only the human sees it)
+        const updatedPlayers = players.map((p, pi) =>
+          pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: true } : c) } : p
         );
-        set({ players: rehidden, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
-        get().botEndTurn();
-      }, 2000);
+        set({ players: updatedPlayers });
+        setTimeout(() => {
+          const s = get();
+          const rehidden = s.players.map((p, pi) =>
+            pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: false } : c) } : p
+          );
+          set({ players: rehidden, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
+          get().botEndTurn();
+        }, 2000);
+      }
       return;
     }
 
@@ -267,17 +274,23 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
 
     if (activePower.type === 'PEEK_AND_SWAP') {
       if (activePower.step === 1) {
-        const updatedPlayers = players.map((p, pi) =>
-          pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: true } : c) } : p
-        );
-        set({ players: updatedPlayers, activePower: { ...activePower, step: 2, selections: [{ playerIndex, cardIndex }], peekingCardId: card.id } });
-        setTimeout(() => {
-          const s = get();
-          const rehidden = s.players.map((p, pi) =>
-            pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: false } : c) } : p
+        const isPeekerBot = players[currentPlayerIndex].isBot;
+        if (isPeekerBot) {
+          get().updateBotMemory(currentPlayerIndex, card.id, card.value);
+          set({ activePower: { ...activePower, step: 2, selections: [{ playerIndex, cardIndex }], peekingCardId: null } });
+        } else {
+          const updatedPlayers = players.map((p, pi) =>
+            pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: true } : c) } : p
           );
-          set({ players: rehidden, activePower: s.activePower ? { ...s.activePower, peekingCardId: null } : null });
-        }, 2000);
+          set({ players: updatedPlayers, activePower: { ...activePower, step: 2, selections: [{ playerIndex, cardIndex }], peekingCardId: card.id } });
+          setTimeout(() => {
+            const s = get();
+            const rehidden = s.players.map((p, pi) =>
+              pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: false } : c) } : p
+            );
+            set({ players: rehidden, activePower: s.activePower ? { ...s.activePower, peekingCardId: null } : null });
+          }, 2000);
+        }
         return;
       }
       if (activePower.step === 2) {
@@ -302,18 +315,24 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
 
     if (activePower.type === 'DOUBLE_PEEK_SWAP') {
       if (activePower.step === 1 || activePower.step === 2) {
-        const updatedPlayers = players.map((p, pi) =>
-          pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: true } : c) } : p
-        );
+        const isPeekerBot = players[currentPlayerIndex].isBot;
         const newStep = activePower.step + 1;
-        set({ players: updatedPlayers, activePower: { ...activePower, step: newStep, selections: [...activePower.selections, { playerIndex, cardIndex }], peekingCardId: card.id } });
-        setTimeout(() => {
-          const s = get();
-          const rehidden = s.players.map((p, pi) =>
-            pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: false } : c) } : p
+        if (isPeekerBot) {
+          get().updateBotMemory(currentPlayerIndex, card.id, card.value);
+          set({ activePower: { ...activePower, step: newStep, selections: [...activePower.selections, { playerIndex, cardIndex }], peekingCardId: null } });
+        } else {
+          const updatedPlayers = players.map((p, pi) =>
+            pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: true } : c) } : p
           );
-          set({ players: rehidden, activePower: s.activePower ? { ...s.activePower, peekingCardId: null } : null });
-        }, 2000);
+          set({ players: updatedPlayers, activePower: { ...activePower, step: newStep, selections: [...activePower.selections, { playerIndex, cardIndex }], peekingCardId: card.id } });
+          setTimeout(() => {
+            const s = get();
+            const rehidden = s.players.map((p, pi) =>
+              pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: false } : c) } : p
+            );
+            set({ players: rehidden, activePower: s.activePower ? { ...s.activePower, peekingCardId: null } : null });
+          }, 2000);
+        }
         return;
       }
       if (activePower.step === 3) {

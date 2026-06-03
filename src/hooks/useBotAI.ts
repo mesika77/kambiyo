@@ -110,6 +110,7 @@ function executeBotPower(botIndex: number, difficulty: Difficulty) {
   }
 
   // PEEK_AND_SWAP and DOUBLE_PEEK_SWAP: peek first, then skip swap
+  // (bot peeks are instantaneous — no visual reveal delay needed)
   if (type === 'PEEK_AND_SWAP' || type === 'DOUBLE_PEEK_SWAP') {
     const unknownIdx = bot.hand.findIndex((c) => !bot.memory[c.id]);
     s.selectCardForPower(botIndex, unknownIdx >= 0 ? unknownIdx : 0);
@@ -123,12 +124,12 @@ function executeBotPower(botIndex: number, difficulty: Difficulty) {
           setTimeout(() => {
             const s3 = useGameStore.getState();
             if (s3.activePower) s3.skipPowerSwap();
-          }, 2500);
+          }, 400);
         } else {
           s2.skipPowerSwap();
         }
       }
-    }, 2500);
+    }, 400);
   }
 }
 
@@ -195,15 +196,26 @@ export function useBotAI() {
         s.drawFromDiscard();
         setTimeout(() => {
           const s2 = useGameStore.getState();
-          if (!s2.drawnCard || s2.currentPlayerIndex !== currentPlayerIndex) return;
-          const swapIdx = worstIdx >= 0 ? worstIdx : Math.floor(Math.random() * INITIAL_HAND_SIZE);
+          if (s2.currentPlayerIndex !== currentPlayerIndex) return;
+          if (!s2.drawnCard) {
+            if (s2.turnPhase === 'WAITING_FOR_DRAW') s2.botEndTurn();
+            return;
+          }
+          const swapIdx = Math.min(
+            worstIdx >= 0 ? worstIdx : Math.floor(Math.random() * INITIAL_HAND_SIZE),
+            s2.players[currentPlayerIndex].hand.length - 1,
+          );
           s2.swapDrawnCard(swapIdx);
         }, rand(200, 600));
       } else {
         s.drawFromDeck();
         setTimeout(() => {
           const s2 = useGameStore.getState();
-          if (!s2.drawnCard || s2.currentPlayerIndex !== currentPlayerIndex) return;
+          if (s2.currentPlayerIndex !== currentPlayerIndex) return;
+          if (!s2.drawnCard) {
+            if (s2.turnPhase === 'WAITING_FOR_DRAW') s2.botEndTurn();
+            return;
+          }
           const bot2 = s2.players[currentPlayerIndex];
           const drawn = s2.drawnCard;
           const worst = getWorstKnownIndex(bot2, s2.turnNumber, difficulty);
@@ -237,4 +249,29 @@ export function useBotAI() {
 
     return () => clearTimeout(timer);
   }, [phase, turnPhase, currentPlayerIndex]);
+
+  // Watchdog: if a bot is still in WAITING_FOR_DRAW well past the max delay, force a draw-and-discard
+  useEffect(() => {
+    if (phase !== 'PLAYING' && phase !== 'CAMBIO_CALLED') return;
+    if (turnPhase !== 'WAITING_FOR_DRAW') return;
+    const player = players[currentPlayerIndex];
+    if (!player?.isBot) return;
+
+    const watchdogMs = BOT_TURN_DELAYS[difficulty].max * 4 + 2000;
+    const watchdog = setTimeout(() => {
+      const s = useGameStore.getState();
+      if (s.currentPlayerIndex !== currentPlayerIndex) return;
+      if (s.turnPhase !== 'WAITING_FOR_DRAW') return;
+      if (!s.players[currentPlayerIndex]?.isBot) return;
+      s.drawFromDeck();
+      setTimeout(() => {
+        const s2 = useGameStore.getState();
+        if (s2.currentPlayerIndex !== currentPlayerIndex) return;
+        if (!s2.drawnCard) { if (s2.turnPhase === 'WAITING_FOR_DRAW') s2.botEndTurn(); return; }
+        s2.discardDrawnCard();
+      }, 400);
+    }, watchdogMs);
+
+    return () => clearTimeout(watchdog);
+  }, [phase, turnPhase, currentPlayerIndex, difficulty]);
 }

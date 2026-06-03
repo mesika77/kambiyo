@@ -9,7 +9,7 @@ export function DrawPile() {
   return (
     <div className="flex flex-col items-center gap-1">
       <motion.div
-        className={`w-14 h-20 rounded-xl bg-[#1A1A2E] border flex items-center justify-center relative overflow-hidden ${canDraw ? 'cursor-pointer border-[#9B5DE5]/50' : 'cursor-default border-[#9B5DE5]/20'}`}
+        className={`w-16 h-24 rounded-xl bg-[#1A1A2E] border flex items-center justify-center relative overflow-hidden ${canDraw ? 'cursor-pointer border-[#9B5DE5]/50' : 'cursor-default border-[#9B5DE5]/20'}`}
         whileTap={canDraw ? { scale: 0.95 } : undefined}
         onClick={canDraw ? drawFromDeck : undefined}
       >
