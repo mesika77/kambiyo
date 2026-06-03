@@ -52,6 +52,9 @@ interface GameActions {
   botEndTurn: () => void;
 }
 
+// Module-level cooldown to prevent rapid-fire penalty accumulation from accidental double-taps
+let humanSlapCooldownUntil = 0;
+
 export const useGameStore = create<GameState & GameActions>((set, get) => ({
   ...INITIAL_STATE,
   humanName: '',
@@ -226,14 +229,15 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
       const updatedPlayers = players.map((p, pi) =>
         pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: true } : c) } : p
       );
-      set({ players: updatedPlayers, activePower: { ...activePower, peekingCardId: card.id } });
+      // Null activePower immediately — prevents double-tap selecting a second card
+      set({ players: updatedPlayers, activePower: null });
       if (players[currentPlayerIndex].isBot) get().updateBotMemory(currentPlayerIndex, card.id, card.value);
       setTimeout(() => {
         const s = get();
         const rehidden = s.players.map((p, pi) =>
           pi === playerIndex ? { ...p, hand: p.hand.map((c, ci) => ci === cardIndex ? { ...c, isRevealed: false } : c) } : p
         );
-        set({ players: rehidden, activePower: null, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
+        set({ players: rehidden, slapLockUntil: Date.now() + HUMAN_GRACE_WINDOW_MS, turnPhase: 'END_TURN' });
         get().botEndTurn();
       }, 2000);
       return;
@@ -335,12 +339,17 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
     const { players, discardPile, slapLockUntil, phase } = get();
     if (phase !== 'PLAYING' && phase !== 'CAMBIO_CALLED') return;
     if (slapLockUntil && Date.now() < slapLockUntil && playerIndex !== 0) return;
+    // Prevent rapid double-tap penalty flooding for the human
+    if (playerIndex === 0 && Date.now() < humanSlapCooldownUntil) return;
 
     const topDiscard = discardPile[discardPile.length - 1];
     if (!topDiscard) return;
     const slapCard = players[playerIndex]?.hand[cardIndex];
     if (!slapCard) return;
     const valid = slapCard.rank === topDiscard.rank;
+
+    // Apply 800ms cooldown on any human slap attempt
+    if (playerIndex === 0) humanSlapCooldownUntil = Date.now() + 800;
 
     if (valid) {
       const newDiscardPile = [...discardPile, { ...slapCard, isRevealed: true }];
