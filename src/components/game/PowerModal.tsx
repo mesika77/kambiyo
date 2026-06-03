@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useGameStore } from '../../store/useGameStore';
 import { Card } from './Card';
@@ -13,6 +14,12 @@ const POWER_PROMPTS: Record<string, string[]> = {
 export function PowerModal() {
   const { turnPhase, pendingPowerCard, activePower, activatePower, skipPower, currentPlayerIndex, players } = useGameStore();
   const isHumanTurn = currentPlayerIndex === 0 && !players[0]?.isBot;
+  const [dismissed, setDismissed] = useState(false);
+
+  // Re-show the banner whenever the step advances
+  useEffect(() => {
+    setDismissed(false);
+  }, [activePower?.step, activePower?.type]);
 
   return (
     <AnimatePresence>
@@ -52,20 +59,30 @@ export function PowerModal() {
         </motion.div>
       )}
 
-      {turnPhase === 'EXECUTING_POWER' && activePower && isHumanTurn && (
+      {turnPhase === 'EXECUTING_POWER' && activePower && isHumanTurn && !dismissed && (
         <motion.div
-          className="fixed top-0 left-0 right-0 z-30 flex justify-center pt-4 pointer-events-none"
-          initial={{ opacity: 0, y: -16 }}
+          key={`${activePower.type}-${activePower.step}`}
+          className="fixed bottom-0 left-0 right-0 z-30 flex justify-center pb-4 pointer-events-none"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -16 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={{ type: 'spring', stiffness: 360, damping: 30 }}
         >
-          <div className="pointer-events-auto bg-[#1A1A2E]/90 border border-[#00F5FF]/40 rounded-2xl px-5 py-3 mx-4 backdrop-blur-sm">
-            <p className="text-[#00F5FF] text-sm font-semibold text-center">
-              {POWER_PROMPTS[activePower.type]?.[activePower.step - 1] ?? 'select a card'}
-            </p>
-            <p className="text-[#F0F0FF]/30 text-xs text-center mt-0.5">
-              step {activePower.step} of {activePower.totalSteps}
-            </p>
+          <div className="pointer-events-auto bg-[#1A1A2E]/95 border border-[#00F5FF]/40 rounded-2xl pl-5 pr-3 py-3 mx-4 backdrop-blur-sm flex items-center gap-3 w-full max-w-sm">
+            <div className="flex-1">
+              <p className="text-[#00F5FF] text-sm font-semibold">
+                {POWER_PROMPTS[activePower.type]?.[activePower.step - 1] ?? 'select a card'}
+              </p>
+              <p className="text-[#F0F0FF]/30 text-xs mt-0.5">
+                step {activePower.step} of {activePower.totalSteps}
+              </p>
+            </div>
+            <button
+              className="w-7 h-7 rounded-full bg-[#0F0F1A] border border-[#00F5FF]/20 flex items-center justify-center text-[#F0F0FF]/50 text-xs font-bold flex-shrink-0"
+              onClick={() => setDismissed(true)}
+            >
+              ✕
+            </button>
           </div>
         </motion.div>
       )}
