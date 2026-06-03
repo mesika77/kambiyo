@@ -403,18 +403,11 @@ export const useGameStore = create<GameState & GameActions>((set, get) => ({
   },
 
   callCambio: (playerIndex) => {
-    const { players, currentPlayerIndex, phase } = get();
+    const { currentPlayerIndex, phase } = get();
     const callerIndex = playerIndex ?? currentPlayerIndex;
     if (phase !== 'PLAYING') return;
-    set({
-      cambioCalledBy: callerIndex,
-      finalRoundRemaining: players.length - 1,
-      phase: 'CAMBIO_CALLED',
-      cambioFXActive: true,
-      turnPhase: 'END_TURN',
-    });
-    setTimeout(() => set({ cambioFXActive: false }), 1200);
-    get().botEndTurn();
+    // Immediately reveal — no more final rounds
+    set({ cambioCalledBy: callerIndex, phase: 'SCORING' });
   },
 
   advanceFinalRound: () => {
