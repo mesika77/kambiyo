@@ -46,22 +46,30 @@ export function Board() {
         )}
       </AnimatePresence>
 
-      {/* Bots — top */}
-      <div className="flex-none overflow-y-auto max-h-[35vh] border-b border-[#9B5DE5]/10 pt-3 pb-2 px-2 flex flex-col gap-1">
-        {bots.map((bot, i) => (
-          <BotRow key={bot.id} player={bot} playerIndex={i + 1} />
-        ))}
+      {/* Bots — horizontal arc row across the top */}
+      <div className="flex-none pt-3 pb-2 px-3">
+        <div className="flex gap-2 justify-around items-start">
+          {bots.map((bot, i) => (
+            <BotRow key={bot.id} player={bot} playerIndex={i + 1} botCount={bots.length} />
+          ))}
+        </div>
       </div>
 
+      {/* Table divider — subtle neon line */}
+      <div className="flex-none mx-4 h-px bg-gradient-to-r from-transparent via-[#9B5DE5]/30 to-transparent" />
+
       {/* Center — piles + Cambio */}
-      <div className="flex-none h-[15vh] flex items-center justify-center gap-6 px-4">
+      <div className="flex-none py-4 flex items-center justify-center gap-6 px-4">
         <DrawPile />
         <CambioButton />
         <DiscardPile />
       </div>
 
+      {/* Table divider */}
+      <div className="flex-none mx-4 h-px bg-gradient-to-r from-transparent via-[#9B5DE5]/20 to-transparent mb-2" />
+
       {/* Human hand — bottom */}
-      <div className="flex-1 flex flex-col justify-start pt-2 overflow-y-auto">
+      <div className="flex-1 flex flex-col justify-start pt-1">
         <div className="flex items-center gap-2 px-4 pb-1">
           <span className="text-[#F0F0FF]/40 text-xs">{players[0]?.name}</span>
           {currentPlayerIndex === 0 && (
