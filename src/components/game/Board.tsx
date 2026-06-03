@@ -13,6 +13,15 @@ export function Board() {
   const { players, currentPlayerIndex, cambioFXActive, cambioCalledBy } = useGameStore();
   const bots = players.slice(1);
 
+  // For 4-5 bots, split into top row + side columns for a real-table feel
+  const useTableLayout = bots.length >= 4;
+  const topBotCount = bots.length === 5 ? 3 : bots.length === 4 ? 2 : bots.length;
+  const topBots = bots.slice(0, topBotCount);
+  const leftBot  = useTableLayout ? bots[topBotCount]     ?? null : null;
+  const rightBot = useTableLayout ? bots[topBotCount + 1] ?? null : null;
+  const leftBotIdx  = topBotCount;
+  const rightBotIdx = topBotCount + 1;
+
   return (
     <div className="min-h-screen bg-[#080810] flex flex-col relative overflow-hidden select-none">
       <SlapFX />
@@ -46,24 +55,44 @@ export function Board() {
         )}
       </AnimatePresence>
 
-      {/* Bots — horizontal arc row across the top */}
+      {/* Top bots row */}
       <div className="flex-none pt-3 pb-2 px-3">
         <div className="flex gap-2 justify-around items-start">
-          {bots.map((bot, i) => (
-            <BotRow key={bot.id} player={bot} playerIndex={i + 1} botCount={bots.length} />
+          {topBots.map((bot, i) => (
+            <BotRow key={bot.id} player={bot} playerIndex={i + 1} botCount={topBotCount} />
           ))}
         </div>
       </div>
 
-      {/* Table divider — subtle neon line */}
+      {/* Table divider */}
       <div className="flex-none mx-4 h-px bg-gradient-to-r from-transparent via-[#9B5DE5]/30 to-transparent" />
 
-      {/* Center — piles + Cambio */}
-      <div className="flex-none py-4 flex items-center justify-center gap-6 px-4">
-        <DrawPile />
-        <CambioButton />
-        <DiscardPile />
-      </div>
+      {/* Center row — side bots flank the piles when 4-5 bots */}
+      {useTableLayout ? (
+        <div className="flex-none flex items-center">
+          <div className="flex-none w-[70px] flex items-center justify-center py-2 px-1">
+            {leftBot && (
+              <BotRow player={leftBot} playerIndex={leftBotIdx + 1} botCount={topBotCount} isSide />
+            )}
+          </div>
+          <div className="flex-1 py-4 flex items-center justify-center gap-4">
+            <DrawPile />
+            <CambioButton />
+            <DiscardPile />
+          </div>
+          <div className="flex-none w-[70px] flex items-center justify-center py-2 px-1">
+            {rightBot && (
+              <BotRow player={rightBot} playerIndex={rightBotIdx + 1} botCount={topBotCount} isSide />
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex-none py-4 flex items-center justify-center gap-6 px-4">
+          <DrawPile />
+          <CambioButton />
+          <DiscardPile />
+        </div>
+      )}
 
       {/* Table divider */}
       <div className="flex-none mx-4 h-px bg-gradient-to-r from-transparent via-[#9B5DE5]/20 to-transparent mb-2" />

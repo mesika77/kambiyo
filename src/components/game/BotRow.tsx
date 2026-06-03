@@ -7,16 +7,16 @@ interface BotRowProps {
   player: Player;
   playerIndex: number;
   botCount: number;
+  isSide?: boolean;
 }
 
-export function BotRow({ player, playerIndex, botCount }: BotRowProps) {
+export function BotRow({ player, playerIndex, botCount, isSide }: BotRowProps) {
   const { currentPlayerIndex, turnPhase, activePower, swapFX } = useGameStore();
   const isActive = currentPlayerIndex === playerIndex;
   const isThinking = isActive && (turnPhase === 'WAITING_FOR_DRAW' || turnPhase === 'HOLDING_DRAWN_CARD');
 
-  // Shrink cards as more bots are added so everyone fits in one horizontal row
-  const cardSize = botCount <= 2 ? 'sm' : 'xs';
-  const avatarSize = botCount <= 3 ? 'text-2xl' : 'text-lg';
+  const cardSize = isSide ? 'xs' : (botCount <= 2 ? 'sm' : 'xs');
+  const avatarSize = isSide ? 'text-base' : (botCount <= 3 ? 'text-2xl' : 'text-lg');
 
   function handleCardClick(cardIndex: number) {
     const s = useGameStore.getState();

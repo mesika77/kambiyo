@@ -15,12 +15,13 @@ export function DiscardPile() {
         onClick={canDraw && topCard ? drawFromDiscard : undefined}
       >
         {topCard ? (
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             <motion.div
               key={topCard.id}
               className="absolute inset-0"
               initial={{ scale: 0.5, opacity: 0, y: -48, rotate: -18 }}
               animate={{ scale: 1, opacity: 1, y: 0, rotate: 0 }}
+              exit={{ opacity: 0, scale: 0.85, y: 14, transition: { duration: 0.12 } }}
               transition={{ type: 'spring', stiffness: 360, damping: 22 }}
             >
               <Card card={{ ...topCard, isRevealed: true }} size="md" />
