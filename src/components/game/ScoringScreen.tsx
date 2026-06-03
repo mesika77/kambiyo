@@ -126,14 +126,14 @@ export function ScoringScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#080810] flex flex-col relative overflow-hidden select-none">
+    <div className="min-h-screen bg-[#080810] flex flex-col relative overflow-y-auto select-none">
 
       {/* ── CAMBIO FLASH ── */}
       <AnimatePresence>
         {showFlash && (
           <motion.div
             key="flash"
-            className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-3"
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, transition: { duration: 0.5 } }}
@@ -173,7 +173,7 @@ export function ScoringScreen() {
 
       {/* ── BOARD-SHAPED REVEAL ── */}
       <motion.div
-        className="flex flex-col min-h-screen"
+        className="flex flex-col"
         initial={{ opacity: 0 }}
         animate={{ opacity: showBoard ? 1 : 0 }}
         transition={{ duration: 0.4 }}
@@ -281,7 +281,7 @@ export function ScoringScreen() {
         </div>
 
         {/* Play Again */}
-        <div className="flex-none pb-10 flex justify-center">
+        <div className="flex-none pt-4 pb-20 flex justify-center" style={{ paddingBottom: 'max(5rem, calc(env(safe-area-inset-bottom) + 3rem))' }}>
           <AnimatePresence>
             {showPlayAgain && (
               <motion.button
