@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createDeck, shuffle, getCardValue, isPowerCard } from './deck';
+import { createDeck, shuffle, getCardValue, isPowerCard, reshuffleDiscard } from './deck';
 
 describe('createDeck', () => {
   it('creates 54 cards', () => {
@@ -58,5 +58,39 @@ describe('isPowerCard', () => {
   });
   it('non-power cards return false', () => {
     ['A','2','3','4','5','6','JOKER'].forEach(r => expect(isPowerCard(r as any)).toBe(false));
+  });
+});
+
+describe('reshuffleDiscard', () => {
+  it('returns empty draw pile if discard has 1 or fewer cards', () => {
+    const deck = createDeck();
+    const result = reshuffleDiscard([deck[0]]);
+    expect(result.newDrawPile).toHaveLength(0);
+    expect(result.newDiscardPile).toHaveLength(1);
+  });
+
+  it('keeps top discard card in new discard pile', () => {
+    const deck = createDeck();
+    const top = deck[0];
+    const result = reshuffleDiscard([deck[1], deck[2], top]);
+    expect(result.newDiscardPile).toHaveLength(1);
+    expect(result.newDiscardPile[0].id).toBe(top.id);
+  });
+
+  it('shuffles all other cards into new draw pile', () => {
+    const deck = createDeck();
+    const discard = [deck[0], deck[1], deck[2]]; // top = deck[2]
+    const result = reshuffleDiscard(discard);
+    expect(result.newDrawPile).toHaveLength(2);
+  });
+
+  it('resets isRevealed and knownBy on reshuffled cards', () => {
+    const deck = createDeck();
+    const revealedCards = deck.slice(0, 3).map(c => ({ ...c, isRevealed: true, knownBy: [0, 1] }));
+    const result = reshuffleDiscard(revealedCards);
+    result.newDrawPile.forEach(c => {
+      expect(c.isRevealed).toBe(false);
+      expect(c.knownBy).toHaveLength(0);
+    });
   });
 });
